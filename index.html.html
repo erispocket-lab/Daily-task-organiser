@@ -686,27 +686,25 @@ function buildTodos(){
       persist();render();showToast("Moved to next day ✓");
     });
 
-    function addTap(el, fn){
-      let moved=false;
-      el.addEventListener("touchstart",()=>{moved=false;},{passive:true});
-      el.addEventListener("touchmove",()=>{moved=true;},{passive:true});
-      el.addEventListener("touchend",e=>{if(!moved){e.stopPropagation();e.preventDefault();fn();}});
-      el.addEventListener("click",e=>{e.stopPropagation();fn();});
+    function onBtn(sel, fn){
+      const el=div.querySelector(sel);
+      el.addEventListener("click",e=>{e.stopPropagation();e.preventDefault();fn();});
+      el.addEventListener("touchend",e=>{e.stopPropagation();e.preventDefault();fn();});
     }
-    addTap(div.querySelector(".todo-del"),()=>{
+    onBtn(".todo-del",()=>{
       if(task.isScheduled){day.scheduled=day.scheduled.filter(s=>s.id!==task.id);}
       else{day.todos=day.todos.filter(t=>t.id!==task.id);}
       persist();render();
     });
-    addTap(div.querySelector(".todo-edit"),()=>openTodoEditor(task));
-    addTap(div.querySelector(".todo-tmrw"),()=>{
+    onBtn(".todo-edit",()=>openTodoEditor(task));
+    onBtn(".todo-tmrw",()=>{
       if(task.isScheduled){day.scheduled=day.scheduled.filter(s=>s.id!==task.id);}
       else{day.todos=day.todos.filter(t=>t.id!==task.id);}
       const nextDay=new Date(S.selectedDate);nextDay.setDate(nextDay.getDate()+1);
       getDay(dateKey(nextDay)).todos.push({id:S.nextId++,text:task.text,duration:task.duration,colorIdx:task.colorIdx,done:false});
       persist();render();showToast("Moved to next day ✓");
     });
-    addTap(div.querySelector(".check-circle"),()=>{
+    onBtn(".check-circle",()=>{
       if(task.isScheduled){
         const it=day.scheduled.find(s=>s.id===task.id);if(it){it.done=!it.done;persist();render();}
       }else{
@@ -835,6 +833,45 @@ document.getElementById("modalTpl").addEventListener("click",e=>{if(e.target===d
 document.getElementById("newTplBtn").addEventListener("click",()=>openTplEditor(null));
 document.getElementById("newBacklogBtn").addEventListener("click",()=>openBacklogEditor(null));
 document.getElementById("newBacklogBtn").addEventListener("touchend",e=>{e.preventDefault();openBacklogEditor(null);});
+
+function openEditModal(opts){
+  const {title,item,onSave}=opts;
+  const existing=item||{text:"",duration:2,colorIdx:S.selColor,note:""};
+  document.getElementById("editModalTitle").textContent=title;
+  document.getElementById("editModalName").value=existing.text;
+  document.getElementById("editModalNote").value=existing.note||"";
+  let selDur=existing.duration,selColor=existing.colorIdx;
+  const durRow=document.getElementById("editModalDurRow");
+  durRow.querySelectorAll(".dur-btn").forEach(b=>{
+    b.classList.toggle("active",parseInt(b.dataset.dur)===selDur);
+    b.onclick=()=>{selDur=parseInt(b.dataset.dur);durRow.querySelectorAll(".dur-btn").forEach(x=>x.classList.toggle("active",x===b));};
+  });
+  const colorRow=document.getElementById("editModalColorRow");
+  colorRow.innerHTML=COLORS.map((c,i)=>
+    "<div style='display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;' data-ci='"+i+"'>"+
+    "<div class='cswatch"+(selColor===i?" active":"")+"' style='background:"+c.bg+"'></div>"+
+    "<div style='font-size:9px;color:#888;text-align:center;width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+(S.colorLabels[i]||"")+"</div>"+
+    "</div>"
+  ).join("");
+  colorRow.querySelectorAll("[data-ci]").forEach(d=>{
+    d.addEventListener("click",()=>{
+      selColor=parseInt(d.dataset.ci);
+      colorRow.querySelectorAll(".cswatch").forEach((s,i)=>s.classList.toggle("active",i===selColor));
+    });
+  });
+  const saveBtn=document.getElementById("editModalSave");
+  saveBtn.textContent=item?"Save changes":(title.includes("backlog")?"Add to backlog":"Save");
+  const doSave=()=>{
+    const name=document.getElementById("editModalName").value.trim();
+    if(!name)return;
+    const note=document.getElementById("editModalNote").value.trim();
+    onSave(name,selDur,selColor,note);
+    closeModal("modalEdit");
+  };
+  saveBtn.onclick=doSave;
+  saveBtn.ontouchend=e=>{e.preventDefault();doSave();};
+  document.getElementById("modalEdit").classList.add("open");
+}
 
 function openBacklogEditor(item){
   // Reuse the time modal as a simple input sheet
