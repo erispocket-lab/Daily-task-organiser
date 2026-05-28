@@ -110,7 +110,7 @@ body{font-family:"Noto Sans JP",-apple-system,sans-serif;background:#FAFAF7;colo
 .tpl-empty{text-align:center;color:#ccc;font-size:14px;padding:40px 20px}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:flex-end}
 .modal-bg.open{display:flex}
-.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 20px 40px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 20px 60px;width:100%;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal-title{font-size:16px;font-weight:900;margin-bottom:4px}
 .modal-sub{font-size:12px;color:#aaa;margin-bottom:16px}
 .time-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
@@ -861,6 +861,9 @@ function openEditModal(opts){
   });
   const saveBtn=document.getElementById("editModalSave");
   saveBtn.textContent=item?"Save changes":(title.includes("backlog")?"Add to backlog":"Save");
+  // Remove old listeners by cloning
+  const newSaveBtn=saveBtn.cloneNode(true);
+  saveBtn.parentNode.replaceChild(newSaveBtn,saveBtn);
   const doSave=()=>{
     const name=document.getElementById("editModalName").value.trim();
     if(!name)return;
@@ -868,8 +871,8 @@ function openEditModal(opts){
     onSave(name,selDur,selColor,note);
     closeModal("modalEdit");
   };
-  saveBtn.onclick=doSave;
-  saveBtn.ontouchend=e=>{e.preventDefault();doSave();};
+  newSaveBtn.addEventListener("click",doSave);
+  newSaveBtn.addEventListener("touchend",e=>{e.stopPropagation();e.preventDefault();doSave();});
   document.getElementById("modalEdit").classList.add("open");
 }
 
