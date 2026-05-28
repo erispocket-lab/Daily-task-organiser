@@ -907,6 +907,15 @@ function openTodoEditor(task){
   });
 }
 
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name));
+}
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>switchTab(t.dataset.tab));
+  t.addEventListener("touchend",e=>{e.preventDefault();switchTab(t.dataset.tab);});
+});
+
 function render(){updateProgress();buildCalStrip();buildTimeline();buildTodos();buildAddForm();buildTemplates();buildBacklog();document.getElementById("pickupInput").value=curDay().pickupTime;}
 
 hydrate().then(()=>{render();});
