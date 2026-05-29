@@ -583,13 +583,15 @@ function openTimePicker(todo){
     const end=s+todo.duration;if(end>TOTAL)break;
     const btn=document.createElement("button");
     btn.className="time-btn";btn.textContent=slotToTime(s);
-    btn.addEventListener("click",()=>{
+    const doSchedule=()=>{
       const day=curDay();
       day.todos=day.todos.filter(t=>t.id!==todo.id);
       day.scheduled.push({id:S.nextId++,text:todo.text,duration:todo.duration,colorIdx:todo.colorIdx,done:false,startSlot:s});
       closeModal("modalTime");persist();render();switchTab("timeline");
       setTimeout(()=>{const sc=document.getElementById("tlScroll");if(sc)sc.scrollTop=Math.max(0,(s-2)*SLOT_H);},100);
-    });
+    };
+    btn.addEventListener("click",doSchedule);
+    btn.addEventListener("touchend",e=>{e.preventDefault();doSchedule();});
     grid.appendChild(btn);
   }
   document.getElementById("modalTime").classList.add("open");
@@ -826,6 +828,10 @@ document.getElementById("tplSaveBtn").addEventListener("click",()=>{
   else{S.templates.push({id:S.nextId++,name,tasks});}
   closeModal("modalTpl");persist();buildTemplates();
 });
+function closeModal(id){
+  document.getElementById(id).classList.remove("open");
+  if(id==="modalTime")document.getElementById("timeGrid").style.gridTemplateColumns="repeat(4,1fr)";
+}
 document.getElementById("tplModalCancel").addEventListener("click",()=>closeModal("modalTpl"));
 document.getElementById("editModalCancel").addEventListener("click",()=>closeModal("modalEdit"));
 document.getElementById("modalEdit").addEventListener("click",e=>{if(e.target===document.getElementById("modalEdit"))closeModal("modalEdit");});
