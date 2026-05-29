@@ -919,6 +919,24 @@ document.querySelectorAll(".tab").forEach(t=>{
   t.addEventListener("touchend",e=>{e.preventDefault();switchTab(t.dataset.tab);});
 });
 
+// Add form handlers
+document.getElementById("durRow").addEventListener("click",e=>{
+  const btn=e.target.closest(".dur-btn");if(!btn)return;
+  S.selDur=parseInt(btn.dataset.dur);
+  document.querySelectorAll("#durRow .dur-btn").forEach(b=>b.classList.toggle("active",b===btn));
+});
+document.getElementById("addSubmit").addEventListener("click",()=>{
+  const name=document.getElementById("taskName").value.trim();if(!name)return;
+  const note=document.getElementById("taskNote")?document.getElementById("taskNote").value.trim():"";
+  curDay().todos.push({id:S.nextId++,text:name,duration:S.selDur,colorIdx:S.selColor,done:false,note:note||""});
+  document.getElementById("taskName").value="";
+  if(document.getElementById("taskNote"))document.getElementById("taskNote").value="";
+  S.selColor=(S.selColor+1)%COLORS.length;
+  persist();render();switchTab("todos");
+});
+document.getElementById("taskName").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("addSubmit").click();});
+document.getElementById("pickupInput").addEventListener("change",e=>{curDay().pickupTime=e.target.value;S.defaultPickup=e.target.value;persist();buildTimeline();});
+
 function buildAddForm(){
   const cr=document.getElementById("colorRow");
   if(!cr)return;
