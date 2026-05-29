@@ -666,7 +666,7 @@ function buildTodos(){
       if(e.target.classList.contains("check-circle")||e.target.classList.contains("todo-del")||e.target.classList.contains("todo-tmrw")||e.target.classList.contains("todo-edit")||e.target.closest(".todo-edit"))return;
       if(!task.done&&!task.isScheduled)openTimePicker(task);
     });
-    addTap(div.querySelector(".todo-edit"),()=>openTodoEditor(task));
+    onBtn(".todo-edit",()=>openTodoEditor(task));
 
     div.querySelector(".check-circle").addEventListener("click",e=>{
       e.stopPropagation();
@@ -918,6 +918,25 @@ document.querySelectorAll(".tab").forEach(t=>{
   t.addEventListener("click",()=>switchTab(t.dataset.tab));
   t.addEventListener("touchend",e=>{e.preventDefault();switchTab(t.dataset.tab);});
 });
+
+function buildAddForm(){
+  const cr=document.getElementById("colorRow");
+  if(!cr)return;
+  cr.innerHTML="";
+  COLORS.forEach((c,i)=>{
+    const wrap=document.createElement("div");
+    wrap.style.cssText="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;";
+    const dot=document.createElement("div");
+    dot.className="cswatch"+(S.selColor===i?" active":"");
+    dot.style.background=c.bg;
+    dot.onclick=()=>{S.selColor=i;buildAddForm();};
+    const lbl=document.createElement("div");
+    lbl.style.cssText="font-size:9px;color:#888;text-align:center;width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+    lbl.textContent=S.colorLabels[i]||"";
+    wrap.appendChild(dot);wrap.appendChild(lbl);
+    cr.appendChild(wrap);
+  });
+}
 
 function render(){updateProgress();buildCalStrip();buildTimeline();buildTodos();buildAddForm();buildTemplates();buildBacklog();document.getElementById("pickupInput").value=curDay().pickupTime;}
 
