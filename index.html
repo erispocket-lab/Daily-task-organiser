@@ -621,6 +621,13 @@ function openLoadTplPicker(){
 document.getElementById("timeModalCancel").addEventListener("click",()=>closeModal("modalTime"));
 document.getElementById("modalTime").addEventListener("click",e=>{if(e.target===document.getElementById("modalTime"))closeModal("modalTime");});
 
+function onBtn(container, sel, fn){
+  const el=container.querySelector(sel);
+  if(!el)return;
+  el.addEventListener("click",e=>{e.stopPropagation();e.preventDefault();fn();});
+  el.addEventListener("touchend",e=>{e.stopPropagation();e.preventDefault();fn();});
+}
+
 function buildTodos(){
   const el=document.getElementById("todoList");el.innerHTML="";
   const day=curDay();
@@ -668,7 +675,7 @@ function buildTodos(){
       if(e.target.classList.contains("check-circle")||e.target.classList.contains("todo-del")||e.target.classList.contains("todo-tmrw")||e.target.classList.contains("todo-edit")||e.target.closest(".todo-edit"))return;
       if(!task.done&&!task.isScheduled)openTimePicker(task);
     });
-    onBtn(".todo-edit",()=>openTodoEditor(task));
+    onBtn(div,".todo-edit",()=>openTodoEditor(task));
 
     div.querySelector(".check-circle").addEventListener("click",e=>{
       e.stopPropagation();
@@ -688,25 +695,20 @@ function buildTodos(){
       persist();render();showToast("Moved to next day ✓");
     });
 
-    function onBtn(sel, fn){
-      const el=div.querySelector(sel);
-      el.addEventListener("click",e=>{e.stopPropagation();e.preventDefault();fn();});
-      el.addEventListener("touchend",e=>{e.stopPropagation();e.preventDefault();fn();});
-    }
-    onBtn(".todo-del",()=>{
+    onBtn(div,".todo-del",()=>{
       if(task.isScheduled){day.scheduled=day.scheduled.filter(s=>s.id!==task.id);}
       else{day.todos=day.todos.filter(t=>t.id!==task.id);}
       persist();render();
     });
-    onBtn(".todo-edit",()=>openTodoEditor(task));
-    onBtn(".todo-tmrw",()=>{
+    onBtn(div,".todo-edit",()=>openTodoEditor(task));
+    onBtn(div,".todo-tmrw",()=>{
       if(task.isScheduled){day.scheduled=day.scheduled.filter(s=>s.id!==task.id);}
       else{day.todos=day.todos.filter(t=>t.id!==task.id);}
       const nextDay=new Date(S.selectedDate);nextDay.setDate(nextDay.getDate()+1);
       getDay(dateKey(nextDay)).todos.push({id:S.nextId++,text:task.text,duration:task.duration,colorIdx:task.colorIdx,done:false});
       persist();render();showToast("Moved to next day ✓");
     });
-    onBtn(".check-circle",()=>{
+    onBtn(div,".check-circle",()=>{
       if(task.isScheduled){
         const it=day.scheduled.find(s=>s.id===task.id);if(it){it.done=!it.done;persist();render();}
       }else{
