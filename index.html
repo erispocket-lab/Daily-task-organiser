@@ -319,6 +319,7 @@ let S={
   selDur:2,
   selColor:0,
   colorLabels:["","","","","","","",""],
+  backlog:[],
 };
 
 function getDay(dk){
@@ -345,13 +346,13 @@ function persist(){
   clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
     try{
-      const payload={days:S.days,templates:S.templates,nextId:S.nextId,defaultPickup:S.defaultPickup,colorLabels:S.colorLabels};
+      const payload={days:S.days,templates:S.templates,backlog:S.backlog,nextId:S.nextId,defaultPickup:S.defaultPickup,colorLabels:S.colorLabels};
       const saveRes=await fetch(SUPABASE_URL+"/rest/v1/schedule_data?id=eq.main",{
         method:"PATCH",
         headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Prefer":"return=minimal"},
         body:JSON.stringify({data:payload,updated_at:new Date().toISOString()}),
       });
-      if(!saveRes.ok){const err=await saveRes.text();console.error("Supabase save error:",saveRes.status,err);}
+      if(!saveRes.ok){const err=await saveRes.text();console.error("Supabase save error:",saveRes.status,err);showToast("Saved locally only ⚠️");return;}
       showToast("Saved ✓");
     }catch(e){showToast("Saved locally ✓");}
   },800);
@@ -375,7 +376,7 @@ async function hydrate(){
       if(d.days)S.days=d.days;if(d.templates)S.templates=d.templates;
       if(d.nextId)S.nextId=d.nextId;if(d.defaultPickup)S.defaultPickup=d.defaultPickup;
       if(d.colorLabels)S.colorLabels=d.colorLabels;if(d.backlog)S.backlog=d.backlog;
-      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}catch(e){}
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify({...d,backlog:S.backlog}));}catch(e){}
       render();
     }
   }catch(e){console.error("Supabase load error:",e);}
@@ -755,6 +756,7 @@ let editingTpl=null,tplDraftTasks=[];
 function buildBacklog(){
   const el=document.getElementById("backlogList");if(!el)return;
   el.innerHTML="";
+  if(!Array.isArray(S.backlog))S.backlog=[];
   if(!S.backlog.length){
     el.innerHTML="<div class='tpl-empty'>No backlog items yet.<br>Add tasks you want to do someday!</div>";return;
   }
